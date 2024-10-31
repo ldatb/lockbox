@@ -1,0 +1,45 @@
+stages:
+  - build
+  - test
+
+# Build the Go binary and Docker image
+build:
+  stage: build
+  image: docker:dind
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+      changes:
+        - '**/*'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+  services:
+    - name: docker:dind
+  script:
+    - docker build -t lockbox:latest -f build/Dockerfile .
+
+# Run tests with the PostgreSQL service running
+test:
+  stage: test
+  image: golang:1.23.2
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: always
+      changes:
+        - '**/*'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+  variables:
+    POSTGRES_USER: testuser
+    POSTGRES_PASSWORD: testpassword
+    POSTGRES_DB: testdb
+    DB_HOST: postgres
+    DB_PORT: 5432
+  services:
+    - name: docker:24.0-dind
+      alias: docker
+    - name: postgres:17
+      alias: postgres
+      command: ["postgres", "-c", "log_statement=all"]
+  script:
+    - go test -v ./...

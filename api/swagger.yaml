@@ -1,0 +1,189 @@
+openapi: 3.0.0
+info:
+  title: Lockbox API
+  version: 1.0.0
+  description: API for managing secrets.
+servers:
+  - url: http://localhost:3000
+    description: Development server
+
+paths:
+  /healthz:
+    get:
+      summary: Basic health check
+      description: Returns the health status of the application.
+      tags:
+        - Health
+      responses:
+        "200":
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /healthz/detailed:
+    get:
+      summary: Detailed health check
+      description: Checks the application's health, including database connectivity.
+      tags:
+        - Health
+      responses:
+        "200":
+          description: Detailed health information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "500":
+          description: Database connection failed
+
+  /secrets:
+    post:
+      summary: Create a new secret
+      description: Creates a new secret and stores it in the database. The secret is encrypted.
+      tags:
+        - Secrets
+      requestBody:
+        description: JSON object containing the secret key and value
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secret_key:
+                  type: string
+                  example: "my_secret_key"
+                secret_value:
+                  type: string
+                  example: "sensitive_data"
+      responses:
+        "201":
+          description: Secret created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecretResponseUUID"
+        "400":
+          description: Invalid request body
+        "500":
+          description: Secret creation failed
+
+  /secrets/{query}:
+    get:
+      summary: Retrieve a secret
+      description: Retrieves an encrypted secret based on a UUID or unique key and decrypts it.
+      tags:
+        - Secrets
+      parameters:
+        - name: query
+          in: path
+          description: UUID or unique key of the secret
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Secret retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecretResponsePlain"
+        "400":
+          description: Missing or invalid query parameter
+        "404":
+          description: Secret not found
+        "500":
+          description: Decryption or retrieval failed
+
+    put:
+      summary: Update a secret
+      description: Updates an existing secret's value based on its UUID or unique key.
+      tags:
+        - Secrets
+      parameters:
+        - name: query
+          in: path
+          description: UUID or unique key of the secret
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: JSON object containing the new secret value
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secret_value:
+                  type: string
+                  example: "new_sensitive_data"
+      responses:
+        "200":
+          description: Secret updated successfully
+        "400":
+          description: Invalid request body or query parameter
+        "404":
+          description: Secret not found
+        "500":
+          description: Update operation failed
+
+    delete:
+      summary: Delete a secret
+      description: Deletes a secret from the database based on its UUID or unique key.
+      tags:
+        - Secrets
+      parameters:
+        - name: query
+          in: path
+          description: UUID or unique key of the secret
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Secret deleted successfully
+        "400":
+          description: Missing or invalid query parameter
+        "404":
+          description: Secret not found
+        "500":
+          description: Delete operation failed
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+        details:
+          type: string
+          example: "none"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2023-10-23T14:54:33Z"
+
+    SecretResponseUUID:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "d290f1ee-6c54-4b01-90e6-d701748f0851"
+        key:
+          type: string
+          example: "my_secret_key"
+
+    SecretResponsePlain:
+      type: object
+      properties:
+        key:
+          type: string
+          example: "my_secret_key"
+        value:
+          type: string
+          example: "sensitive_data"
