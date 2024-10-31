@@ -1,7 +1,5 @@
 # Lockbox
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/ldatb/lockbox)](https://goreportcard.com/report/github.com/ldatb/lockbox)
-
 **Lockbox** is an open-source solution for secure secret management, credential storage, and compliance-focused security. Designed to facilitate multi-cloud orchestration, Lockbox offers robust features for managing sensitive information with ease.
 
 Lockbox is built to provide enterprise-grade security based on best practices from modern cloud and container infrastructure. It empowers users to securely manage credentials, automate infrastructure, and integrate seamlessly with cloud-native tools.
